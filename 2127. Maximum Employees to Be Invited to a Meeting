@@ -1,0 +1,235 @@
+/*
+ * @lc app=leetcode id=2127 lang=javascript
+ *
+ * [2127] Maximum Employees to Be Invited to a Meeting
+ */
+
+// @lc code=start
+/**
+ * @param {number[]} favorite
+ * @return {number}
+ */
+var maximumInvitations = function (favorite) {
+    //console.log(favorite);
+    let processedIndexes = [];
+    let lg = favorite.length;
+    let invitees = new Map();
+    let le = 0;
+    let levelLoopStatus = new Map();
+    let fi;
+    let adjucentNodes = new Map();
+    let nonLoopEndsSame = new Map();
+    let removedList = [];
+
+    function getInviteeMatrix(le, pi) {
+        //console.log(le);
+        if(le >= lg) {
+            //console.log("Loop Completed");
+            return;
+        }
+        function addToInviteeList(le, pi, fi) {
+            if(!invitees.has(le))
+                invitees.set(le,[]);
+
+            if(pi != -1 && invitees.get(le).indexOf(pi) == -1)
+                invitees.get(le).push(pi);
+
+            if(fi != -1 && invitees.get(le).indexOf(fi) == -1)
+                invitees.get(le).push(fi);
+        }
+        function addToAdjucentList(pi, fi) {
+            if (!adjucentNodes.has(pi)) {
+                    adjucentNodes.set(pi, [fi]);
+            } else {
+                if(adjucentNodes.get(pi).indexOf(fi) == -1)
+                    adjucentNodes.get(pi).push(fi);
+            }
+            if (!adjucentNodes.has(fi)) {
+                    adjucentNodes.set(fi, [pi]);
+            } else {
+                if(adjucentNodes.get(fi).indexOf(pi) == -1)
+                    adjucentNodes.get(fi).push(pi);
+            }
+        }
+        function findInInviteeListOfLevel(le, fi) {
+            return invitees.get(le).indexOf(key);
+        }
+        function getLevelOffi(fi){
+            for (const [kk, val] of invitees) {
+                if(val.indexOf(fi) != -1){
+                    return kk;
+                }
+            }
+            return -1;
+        }
+        function addToNonLoopEndsSame(lastNum, le) {
+            if(!nonLoopEndsSame.has(lastNum)){
+                nonLoopEndsSame.set(lastNum,le);
+            } else {
+                let lastLevel = nonLoopEndsSame.get(lastNum);
+                let lastLevelLn = invitees.get(lastLevel).length;
+                let curLn = invitees.get(le).length;
+                if(curLn > lastLevelLn) {
+                    nonLoopEndsSame.set(lastNum,le);
+                }
+            }
+        }
+        processedIndexes.push(pi);
+        //console.log("le " + le + " pi: "+ pi);
+        addToInviteeList(le, pi, -1);
+
+        //console.log(invitees);
+        fi = favorite[pi];
+        //addToAdjucentList(pi, fi);
+        /*
+            check if fi is already processed then there is chance of loop
+else
+        */
+        if(processedIndexes.indexOf(fi) != -1) {
+            //console.log('1 => ' + pi + 's favourite person is processed:
+' + fi + ' -- Level ' + le);
+            let skipToNextLoop = 1;
+            if(invitees.get(le).indexOf(fi) != -1) {
+                //console.log("Found at same level");
+                processedIndexes.push(fi);
+                //console.log("le " + le + " fi: "+ fi);
+                addToInviteeList(le, -1, fi);
+                levelLoopStatus.set(le,0);
+
+                if(favorite[fi] != pi) {
+                    //console.log("Loop Found");
+                    let myFish = invitees.get(le);
+                    let removed = myFish.splice(0, myFish.indexOf(fi));
+                    removedList.push(...removed);
+                    //console.log('removed');
+                    //console.log(removed);
+                    levelLoopStatus.set(le,1);
+                } else {
+                    //console.log("Loop Not Found");
+                }
+                //console.log(invitees);
+
+            } else {
+
+                levelLoopStatus.set(le,0);
+                if(removedList.length > 0 && removedList.indexOf(fi) != -1)
+{
+                    //console.log('1. Removed: ' + le);
+                    invitees.delete(le);
+                } else {
+                    let fiInLevel = getLevelOffi(fi);
+                    if(fiInLevel != -1) {
+                        //console.log("Found at different level: " +
+fiInLevel);
+                        let ln = invitees.get(le).length;
+                        //console.log('fi: ' +adjucentNodes.get(fi).length);
+
+                        if(levelLoopStatus.get(fiInLevel) ==0){
+                            //console.log("Found at different level w/o
+loop");
+                            processedIndexes.push(fi);
+
+                            let fiList  = invitees.get(fiInLevel);
+                            let ls;
+                            for(let i = fiList.indexOf(fi); i <
+fiList.length;i++){
+                                addToInviteeList(le, -1, fiList[i]);
+                                ls = fiList[i];
+                            }
+                            let lsfs = favorite[ls];
+                            while(invitees.get(le).indexOf(lsfs) == -1 ) {
+                                addToInviteeList(le, -1, lsfs);
+                                lsfs = favorite[lsfs];
+                            }
+
+
+                            /*
+                            addToInviteeList(le, -1, fi);
+                            getInviteeMatrix(le, fi);
+                            skipToNextLoop = 0;
+                            */
+                        }
+                        else {
+                            //console.log('2. Removed: ' + le);
+                            invitees.delete(le);
+                            //console.log("Found at different level w
+loop");
+                        }
+                    } else {
+                        //console.log("here");
+                        processedIndexes.push(fi);
+                        addToInviteeList(le, -1, fi);
+                        getInviteeMatrix(le, fi);
+                        skipToNextLoop = 0;
+                    }
+                }
+            }
+            if(skipToNextLoop) {
+                if(invitees.has(le) && invitees.get(le).length < 2) {
+                    invitees.delete(le);
+                }
+                if(invitees.has(le) && levelLoopStatus.get(le) == 0)
+
+addToNonLoopEndsSame(invitees.get(le)[invitees.get(le).length - 1],le);
+
+                le = le + 1;
+                while(processedIndexes.indexOf(le) != -1)
+                    le = le + 1;
+
+                //console.log('increase level: '+ le);
+                getInviteeMatrix(le, le);
+            }
+        } else {
+            //console.log('2 => ' + pi + 's favourite person is not
+processed: ' + fi + ' -- Level ' + le);
+            processedIndexes.push(fi);
+            //console.log("le " + le + " pi: "+ pi + " fi: "+ fi);
+            addToInviteeList(le, pi, fi);
+            getInviteeMatrix(le, fi);
+        }
+    }
+    getInviteeMatrix(le, 0);
+
+    //console.log('Before invitees');
+    console.log(invitees);
+
+    for (const [kk, val] of invitees) {
+
+        if(levelLoopStatus.get(kk) ==0
+        && nonLoopEndsSame.has(val[val.length - 1])
+        && nonLoopEndsSame.get(val[val.length - 1]) != kk) {
+            invitees.delete(kk);
+        }
+    }
+    //console.log('After delete invitees');
+    //console.log('After invitees');
+    //console.log(invitees);
+    //console.log('levelLoopStatus');
+    //console.log(levelLoopStatus);
+    //console.log('nonLoopEndsSame');
+    //console.log(nonLoopEndsSame);
+    //console.log('removedList');
+    //console.log(removedList);
+
+    let a = [];
+    for (const [kk, val] of invitees) {
+        if(val.length == 2 || levelLoopStatus.get(kk) ==0) {
+            a = a.concat(val);
+        }
+    }
+    a = a.filter((item,index)=>{
+        return (a.indexOf(item) == index)
+    });
+    //console.log(a);
+    let mostVal = a.length;
+    for (const [kk, val] of invitees) {
+        if(val.length > 2 && levelLoopStatus.get(kk) == 1) {
+            if(mostVal < parseInt(val.length)) {
+                mostVal = parseInt(val.length);
+            }
+        }
+    }
+   // console.log(mostVal);
+    return mostVal;
+};
+// @lc code=end
