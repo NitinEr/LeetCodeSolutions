@@ -1,0 +1,407 @@
+/**
+ * @param {string[]} grid
+ * @return {number}
+ */
+var shortestPathAllKeys = function(grid) {
+    // Adjacency Matrix
+    let row = grid.length;
+    let col = 0;
+    let arrGrid = [];
+    let startIndex = [];
+    let keysInfo = {};
+    let bkKeysInfo = {};
+    let NoOfKeys = 0;
+    let noOfSteps = 0;
+    let keysToBeTraverse = [];
+    let distinctGraph = [];
+    let graphKeyIndex = {};
+    graphKeyIndex['r'] = 0;
+    let index = 1;
+    for (var i = 0; i < row; i++) {
+        arrGrid[i] = [];
+        let str = grid[i];
+        col = str.length;
+        for (var j = 0; j < str.length; j++) {
+            arrGrid[i][j] = str[j];
+
+            if(['a','b','c','d','e','f'].indexOf(str[j]) !== -1) {
+                graphKeyIndex[str[j]] = index;
+                index++;
+                keysToBeTraverse.push(str[j]);
+                NoOfKeys++;
+            }
+
+            if(str[j] == "@")
+                startIndex = [i,j];
+        }
+    }
+
+    for(let i=0; i <= NoOfKeys; i++) {
+        distinctGraph[i] = [];
+        for(let j=0; j <= NoOfKeys; j++)  {
+            if(i == j)
+                distinctGraph[i][j] = 0;
+            else
+                distinctGraph[i][j] = 999;
+        }
+    }
+    
+    let enqueueList = []; //To store nodes to be processed.
+    let visited = {}; // To store visited nodes
+    let distance = {};
+   
+    enqueueList.push(startIndex);  // Add starting node to enqueue
+    const adjacentNodes = function(currentNode){
+        let r = currentNode[0];
+        let c = currentNode[1];
+        let nodes = [];
+        if(c !=0) {
+            nodes.push([r,c-1]);
+        }
+        if(c < col - 1) {
+            nodes.push([r,c+1]);
+        }
+        if(r !=0 ) {
+            nodes.push([r-1,c]);
+        }
+        if(r < row - 1) {
+            nodes.push([r+1,c]);
+        }
+        return nodes;
+    }
+    const isVisited = function(nodeRowIndex,nodeColumnIndex) {
+        if(!Object.hasOwn(visited,nodeRowIndex)){
+            return false;
+        } else {
+            if(visited[nodeRowIndex].indexOf(nodeColumnIndex) == -1) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    const addNodeToVisited = function (nodeRowIndex,nodeColumnIndex){
+        if(Object.hasOwn(visited,nodeRowIndex)) {
+            if(visited[nodeRowIndex].indexOf(nodeColumnIndex) == -1) {
+                visited[nodeRowIndex].push(nodeColumnIndex);
+            }
+        } else {
+            visited[nodeRowIndex] = [nodeColumnIndex];
+        }
+    }
+    const setDistanceInGraph = function(rootIndexVal, distinces){
+        
+        let rootIndex = graphKeyIndex[rootIndexVal];
+
+        distinctGraph[rootIndex][0] = 0;
+
+        for (let key in distinces) {
+            if (distinces.hasOwnProperty(key)) {
+                let nodeIndex = graphKeyIndex[key];
+                distinctGraph[rootIndex][nodeIndex] = distinces[key];
+            }
+        }
+    }
+    function isEmpty(obj) {
+        for (const prop in obj) {
+          if (Object.hasOwn(obj, prop)) {
+            return false;
+          }
+        }
+      
+        return true;
+    }
+    const getDistince = function(destKey, enqueueList, keyDetails) {
+        noOfSteps++;
+        let nextEnqueueList = [];
+        let keyDestFound = false;
+
+        for(let j=0;j < enqueueList.length;j++) {
+            let currentNode = enqueueList[j];
+            console.log('noOfSteps:- ' + noOfSteps);
+            console.log(currentNode);
+            addNodeToVisited(currentNode[0],currentNode[1]);
+            let adjNodes = adjacentNodes([currentNode[0],currentNode[1]]); // Get Adjacent Nodes
+            for(let i = 0; i < adjNodes.length;i++) {
+                
+                let node = adjNodes[i];
+                let nodeRowIndex = node[0];
+                let nodeColumnIndex = node[1];
+
+                //If destKey found then exit
+                if(arrGrid[nodeRowIndex][nodeColumnIndex] == destKey) {
+                    keyDestFound = true;
+                    break;
+                }
+                
+                //If node is already visted then skip it
+                if(isVisited(nodeRowIndex,nodeColumnIndex)) {
+                    continue;
+                }
+                
+                if(['a','b','c','d','e','f'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) !== -1 
+                    && !Object.hasOwn(keyDetails,arrGrid[nodeRowIndex][nodeColumnIndex]) ) {
+                    
+                    console.log('Root Key:- ' + rootIndex
+                                    + ' Key Found:- '+ arrGrid[nodeRowIndex][nodeColumnIndex] 
+                                    + ' NoOfStep:- '+ noOfSteps
+                                    + ' RowIndex:- ' + rootKeyIndex
+                                    + ' ColumnIndex:- ' + destKeyIndex);  
+                    
+                    keyDetails[arrGrid[nodeRowIndex][nodeColumnIndex]]= "" + nodeRowIndex + nodeColumnIndex;
+                } 
+            
+                if(arrGrid[nodeRowIndex][nodeColumnIndex] != "#" 
+                    && !isVisited(nodeRowIndex,nodeColumnIndex)
+                    && ['A','B','C','D','E','F'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) == -1
+                     ){
+                    nextEnqueueList.push(node);
+                }  
+
+                if(['A','B','C','D','E','F'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) != -1
+                && !isVisited(nodeRowIndex,nodeColumnIndex)
+                && Object.hasOwn(keyDetails,arrGrid[nodeRowIndex][nodeColumnIndex].toLowerCase()) ) {
+                    
+                    nextEnqueueList.push(node);
+                }    
+            }
+            if(keyDestFound) {
+                break;
+            }
+        }
+        //console.log("----------")
+        //console.log(nextEnqueueList);
+        if(nextEnqueueList.length > 0 && !keyDestFound) {
+            traverse(destKey, nextEnqueueList);
+        } 
+        return noOfSteps;
+    }
+
+    const traverse = function(enqueueList,rootIndex) {
+        console.log('rootIndex:- ' + rootIndex)
+        noOfSteps++;
+        let nextEnqueueList = [];
+        
+        for(let j=0;j < enqueueList.length;j++) {
+            let currentNode = enqueueList[j];
+            console.log('noOfSteps:- ' + noOfSteps);
+            console.log(currentNode);
+            addNodeToVisited(currentNode[0],currentNode[1]);
+            let adjNodes = adjacentNodes([currentNode[0],currentNode[1]]); // Get Adjacent Nodes
+            for(let i = 0; i < adjNodes.length;i++) {
+                
+                let node = adjNodes[i];
+                let nodeRowIndex = node[0];
+                let nodeColumnIndex = node[1];
+
+                if(isVisited(nodeRowIndex,nodeColumnIndex)) {
+                    continue;
+                }
+                
+                if(['a','b','c','d','e','f'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) !== -1 
+                    && !Object.hasOwn(keysInfo,arrGrid[nodeRowIndex][nodeColumnIndex]) ) {
+                      
+                    distance[arrGrid[nodeRowIndex][nodeColumnIndex]] = noOfSteps;
+                    let rootKeyIndex = graphKeyIndex[rootIndex];
+                    let destKeyIndex = graphKeyIndex[arrGrid[nodeRowIndex][nodeColumnIndex]];
+                    distinctGraph[rootKeyIndex][destKeyIndex] = noOfSteps;
+
+                    console.log('Root Key:- ' + rootIndex
+                                    + ' Key Found:- '+ arrGrid[nodeRowIndex][nodeColumnIndex] 
+                                    + ' NoOfStep:- '+ noOfSteps
+                                    + ' RowIndex:- ' + rootKeyIndex
+                                    + ' ColumnIndex:- ' + destKeyIndex);  
+                    
+                    keysInfo[arrGrid[nodeRowIndex][nodeColumnIndex]]= "" + nodeRowIndex + nodeColumnIndex;
+                    bkKeysInfo[arrGrid[nodeRowIndex][nodeColumnIndex]]= "" + nodeRowIndex + nodeColumnIndex;
+                } 
+                
+                if(Object.keys(keysInfo).length == NoOfKeys) {
+                    
+                    if(keysToBeTraverse.length > 0 && !isEmpty(bkKeysInfo)) {
+                        
+                        let keyToTraverse = keysToBeTraverse.pop();
+
+                        if(Object.hasOwn(bkKeysInfo,keyToTraverse)) {
+                            visited = {};
+                            addNodeToVisited(startIndex[0],startIndex[1]);
+                            distance =  {};   
+                            nextEnqueueList = [];
+                            nextEnqueueList.push([parseInt(bkKeysInfo[keyToTraverse].charAt(0)),
+                                    parseInt(bkKeysInfo[keyToTraverse].charAt(1))]); 
+                            keysInfo = {};
+                            noOfSteps = 0;
+                            keysInfo[keyToTraverse] = bkKeysInfo[keyToTraverse];
+                            rootIndex = keyToTraverse;
+                            console.log('1. KeyToTraverse:- '+ keyToTraverse);
+                            traverse(nextEnqueueList, rootIndex);
+                        }
+                    } /*else {
+                        setDistanceInGraph(rootIndex, distance);
+                    }*/
+                    
+                    break;
+                }
+
+                if(arrGrid[nodeRowIndex][nodeColumnIndex] != "#" 
+                    && !isVisited(nodeRowIndex,nodeColumnIndex)
+                    && ['A','B','C','D','E','F'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) == -1
+                     ){
+                    nextEnqueueList.push(node);
+                }  
+
+                if(['A','B','C','D','E','F'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) != -1
+                && !isVisited(nodeRowIndex,nodeColumnIndex)
+                && Object.hasOwn(keysInfo,arrGrid[nodeRowIndex][nodeColumnIndex].toLowerCase()) ) {
+                    
+                    nextEnqueueList.push(node);
+                }    
+            }
+        }
+        //console.log("----------")
+        //console.log(nextEnqueueList);
+        if(nextEnqueueList.length > 0 && Object.keys(keysInfo).length < NoOfKeys) {
+            traverse(nextEnqueueList, rootIndex);
+        } else if(keysToBeTraverse.length > 0 && !isEmpty(bkKeysInfo)) {
+            //setDistanceInGraph(rootIndex, distance);
+            let keyToTraverse = keysToBeTraverse.pop();
+
+            if(Object.hasOwn(bkKeysInfo,keyToTraverse)) {
+                visited = {};
+                addNodeToVisited(startIndex[0],startIndex[1]);
+                distance =  {};   
+                nextEnqueueList = [];
+                nextEnqueueList.push([parseInt(bkKeysInfo[keyToTraverse].charAt(0)),
+                                                    parseInt(bkKeysInfo[keyToTraverse].charAt(1))]); 
+                keysInfo = {};
+                noOfSteps = 0;
+                keysInfo[keyToTraverse] = bkKeysInfo[keyToTraverse];
+                rootIndex = keyToTraverse;  
+                console.log('2. KeyToTraverse:- '+ keyToTraverse);
+                traverse(nextEnqueueList, rootIndex);
+            }
+            //console.log('keyToTraverse:-',keyToTraverse);
+            //console.log(bkKeysInfo);
+        }
+    }
+    //traverse(enqueueList,'r');
+    //console.log(arrGrid);
+    console.log(graphKeyIndex);
+    console.log('distinctGraph');
+    console.log(distinctGraph);
+    /*
+    let ignoreKeys = [];
+    for (const prop in graphKeyIndex) {
+        if (Object.hasOwn(graphKeyIndex, prop)) {
+            let keyIndex = graphKeyIndex[prop]; 
+            if(distinctGraph[keyIndex].filter(val => (val != 999 && val != 0)).length == 0)
+            {
+                ignoreKeys.push(prop);
+            }
+        }
+    }
+    
+    console.log(ignoreKeys);
+    return;
+    */
+    
+    //return;
+    let nodes = Object.values(graphKeyIndex);
+    nodes.shift();
+
+    const getCombinations = function(nodes) {
+        let nodeComb = [];
+        nodeComb.push([...nodes]);
+        for(let j=0;j < nodes.length; j++) {
+            nodes.push(nodes.shift());
+            let temp =  nodes;
+            //console.log(nodes);
+            nodeComb.push([...temp]);
+        }
+        nodes.push(nodes.shift());
+        return nodeComb
+    }
+    let arrCosts = [];
+    let allCombinations = {};
+    const findMimMovesAllKeys = function(rootIndex, combIndex, nodes, endIndex) {
+        //console.log('rootIndex -->' + rootIndex + ' --> nextIndex --> '+ combIndex);
+        if(nodes.length == 0) {
+            return 0;
+        }
+        let nodeComb = allCombinations[combIndex];
+        //console.log("1. Index combination:- "+combIndex)
+        //console.log(nodeComb);
+        let min;
+        let cost; 
+        
+        for(let i=0; i < nodeComb.length - 1; i++) {
+            //console.log('Combination Traverse:- '  + rootIndex);
+            //console.log(nodeComb[i]);
+            if(rootIndex == 0) {
+                
+                min = 0;
+                cost = 0;
+                //console.log("min:- " + min + " cost" + cost);
+            }
+            
+            
+            for(let j=0; j < nodeComb[i].length; j++) {
+                let excludeVal = nodeComb[i][j];
+
+                //console.log('excludeVal: '+ excludeVal)
+                
+                let tempNodeComb = nodeComb[i].filter(val => val != excludeVal);
+        
+                if(tempNodeComb.length > 1) {                    
+                    let cIndex = ""+ rootIndex + excludeVal;
+                    allCombinations[cIndex] = getCombinations(tempNodeComb);
+                     
+                    if(distinctGraph[rootIndex][nodeComb[i][j]] != 999) {
+                        //console.log('Out---'+distinctGraph[rootIndex][nodeComb[i][j]]);
+                       // console.log(findMimMovesAllKeys(nodeComb[i][j],cIndex, tempNodeComb, 1));
+                        
+                        cost = parseInt(distinctGraph[rootIndex][nodeComb[i][j]]) 
+                                + parseInt(findMimMovesAllKeys(nodeComb[i][j],cIndex, tempNodeComb, 1));
+                    }
+                    else {
+                        //console.log('In----');
+                        cost = parseInt(distinctGraph[rootIndex][nodeComb[i][j]]); 
+                    }
+                    
+                    //console.log('Before end > rootIndex ' + rootIndex +'---' + nodeComb[i][j] +' cost -> ' + cost); 
+                } else {
+                    let tc = parseInt(distinctGraph[rootIndex][nodeComb[i][j]]) 
+                    if(tempNodeComb.length != 0)
+                        tc +=  parseInt(distinctGraph[nodeComb[i][j]][tempNodeComb[0]]);
+
+                    //console.log('End > rootIndex ' + rootIndex + "-- to -- " + nodeComb[i][j] +'-to-' + tempNodeComb[0] +' cost ---> ' + tc);
+                    cost = tc;
+                }
+
+                if(j == 0) {
+                    min = cost;
+                }
+
+                if(min > cost)
+                    min = cost;
+            }
+        }
+
+        console.log('>>>>>>>>>>>>>>>> rootIndex:- '+rootIndex+' -- min --' +min);
+        
+        return min;
+    }
+    allCombinations["" + 0] = getCombinations(nodes);
+    let min = findMimMovesAllKeys(0,"0",nodes,1);
+
+    if (isNaN(min) || min == 999 || min > 999 || min == 0) {
+        return -1;
+    } else {
+        return min;
+    }
+    
+};
+
+
+
+//shortestPathAllKeys(grid)
