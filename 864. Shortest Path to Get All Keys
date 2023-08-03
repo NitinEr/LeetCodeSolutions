@@ -1,7 +1,3 @@
-/**
- * @param {string[]} grid
- * @return {number}
- */
 var shortestPathAllKeys = function(grid) {
     // Adjacency Matrix
     let row = grid.length;
@@ -16,6 +12,7 @@ var shortestPathAllKeys = function(grid) {
     let distinctGraph = [];
     let graphKeyIndex = {};
     graphKeyIndex['r'] = 0;
+    let keysIndexes = {};
     let index = 1;
     for (var i = 0; i < row; i++) {
         arrGrid[i] = [];
@@ -26,13 +23,18 @@ var shortestPathAllKeys = function(grid) {
 
             if(['a','b','c','d','e','f'].indexOf(str[j]) !== -1) {
                 graphKeyIndex[str[j]] = index;
+                keysIndexes[str[j]] = [i,j];
                 index++;
                 keysToBeTraverse.push(str[j]);
                 NoOfKeys++;
             }
 
-            if(str[j] == "@")
+            if(str[j] == "@"){
                 startIndex = [i,j];
+                keysIndexes['r'] = [i,j];
+
+            }
+                
         }
     }
 
@@ -111,42 +113,61 @@ var shortestPathAllKeys = function(grid) {
       
         return true;
     }
+
+    function getIndex(obj, key) {
+        for (const prop in obj) {
+            if (Object.hasOwn(obj, prop) && obj[prop] === key ) {
+                return prop;
+            }
+        }
+    }
+
+    let keyDestFound = false;
     const getDistince = function(destKey, enqueueList, keyDetails) {
         noOfSteps++;
         let nextEnqueueList = [];
-        let keyDestFound = false;
-
+        //console.log("getDistince");
+        //console.log(destKey);
+        //console.log(enqueueList);
+        //console.log(keyDetails);
+        //return;
         for(let j=0;j < enqueueList.length;j++) {
             let currentNode = enqueueList[j];
-            console.log('noOfSteps:- ' + noOfSteps);
-            console.log(currentNode);
+            //console.log('noOfSteps:- ' + noOfSteps);
+            //console.log("currentNode");
+            //console.log(currentNode);
             addNodeToVisited(currentNode[0],currentNode[1]);
             let adjNodes = adjacentNodes([currentNode[0],currentNode[1]]); // Get Adjacent Nodes
+            //console.log("adjNodes")
+            //console.log(adjNodes);
             for(let i = 0; i < adjNodes.length;i++) {
                 
                 let node = adjNodes[i];
                 let nodeRowIndex = node[0];
                 let nodeColumnIndex = node[1];
-
+                //console.log('Inside');
+                //console.log(node);
                 //If destKey found then exit
                 if(arrGrid[nodeRowIndex][nodeColumnIndex] == destKey) {
+                    //console.log("KeyFound:- " + destKey + " Steps:" + noOfSteps)
                     keyDestFound = true;
                     break;
                 }
                 
                 //If node is already visted then skip it
                 if(isVisited(nodeRowIndex,nodeColumnIndex)) {
+                    //console.log("Visited");
                     continue;
                 }
                 
                 if(['a','b','c','d','e','f'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) !== -1 
                     && !Object.hasOwn(keyDetails,arrGrid[nodeRowIndex][nodeColumnIndex]) ) {
-                    
-                    console.log('Root Key:- ' + rootIndex
-                                    + ' Key Found:- '+ arrGrid[nodeRowIndex][nodeColumnIndex] 
+                    /*
+                    console.log(' Key Found:- '+ arrGrid[nodeRowIndex][nodeColumnIndex] 
                                     + ' NoOfStep:- '+ noOfSteps
-                                    + ' RowIndex:- ' + rootKeyIndex
-                                    + ' ColumnIndex:- ' + destKeyIndex);  
+                                    + ' RowIndex:- ' + nodeRowIndex
+                                    + ' ColumnIndex:- ' + nodeColumnIndex);  
+                    */
                     
                     keyDetails[arrGrid[nodeRowIndex][nodeColumnIndex]]= "" + nodeRowIndex + nodeColumnIndex;
                 } 
@@ -155,13 +176,14 @@ var shortestPathAllKeys = function(grid) {
                     && !isVisited(nodeRowIndex,nodeColumnIndex)
                     && ['A','B','C','D','E','F'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) == -1
                      ){
+                    //console.log("1. Pushed to enqueue list");    
                     nextEnqueueList.push(node);
                 }  
 
                 if(['A','B','C','D','E','F'].indexOf(arrGrid[nodeRowIndex][nodeColumnIndex]) != -1
                 && !isVisited(nodeRowIndex,nodeColumnIndex)
                 && Object.hasOwn(keyDetails,arrGrid[nodeRowIndex][nodeColumnIndex].toLowerCase()) ) {
-                    
+                    //console.log("2. Pushed to enqueue list");   
                     nextEnqueueList.push(node);
                 }    
             }
@@ -172,9 +194,12 @@ var shortestPathAllKeys = function(grid) {
         //console.log("----------")
         //console.log(nextEnqueueList);
         if(nextEnqueueList.length > 0 && !keyDestFound) {
-            traverse(destKey, nextEnqueueList);
+            getDistince(destKey, nextEnqueueList, keyDetails);
         } 
-        return noOfSteps;
+        if(keyDestFound)
+            return noOfSteps;
+        else 
+            return 999;
     }
 
     const traverse = function(enqueueList,rootIndex) {
@@ -236,9 +261,9 @@ var shortestPathAllKeys = function(grid) {
                             console.log('1. KeyToTraverse:- '+ keyToTraverse);
                             traverse(nextEnqueueList, rootIndex);
                         }
-                    } /*else {
-                        setDistanceInGraph(rootIndex, distance);
-                    }*/
+                    } //else {
+                        //setDistanceInGraph(rootIndex, distance);
+                    //}
                     
                     break;
                 }
@@ -282,28 +307,9 @@ var shortestPathAllKeys = function(grid) {
             }
             //console.log('keyToTraverse:-',keyToTraverse);
             //console.log(bkKeysInfo);
-        }
-    }
-    //traverse(enqueueList,'r');
-    //console.log(arrGrid);
-    console.log(graphKeyIndex);
-    console.log('distinctGraph');
-    console.log(distinctGraph);
-    /*
-    let ignoreKeys = [];
-    for (const prop in graphKeyIndex) {
-        if (Object.hasOwn(graphKeyIndex, prop)) {
-            let keyIndex = graphKeyIndex[prop]; 
-            if(distinctGraph[keyIndex].filter(val => (val != 999 && val != 0)).length == 0)
-            {
-                ignoreKeys.push(prop);
-            }
-        }
+        } 
     }
     
-    console.log(ignoreKeys);
-    return;
-    */
     
     //return;
     let nodes = Object.values(graphKeyIndex);
@@ -323,7 +329,8 @@ var shortestPathAllKeys = function(grid) {
     }
     let arrCosts = [];
     let allCombinations = {};
-    const findMimMovesAllKeys = function(rootIndex, combIndex, nodes, endIndex) {
+    //let keyStore = {};
+    const findMimMovesAllKeys = function(rootIndex, combIndex, nodes, endIndex, keyStore) {
         //console.log('rootIndex -->' + rootIndex + ' --> nextIndex --> '+ combIndex);
         if(nodes.length == 0) {
             return 0;
@@ -338,42 +345,92 @@ var shortestPathAllKeys = function(grid) {
             //console.log('Combination Traverse:- '  + rootIndex);
             //console.log(nodeComb[i]);
             if(rootIndex == 0) {
-                
                 min = 0;
                 cost = 0;
-                //console.log("min:- " + min + " cost" + cost);
+                keyStore = {};
             }
             
             
             for(let j=0; j < nodeComb[i].length; j++) {
                 let excludeVal = nodeComb[i][j];
 
-                //console.log('excludeVal: '+ excludeVal)
-                
                 let tempNodeComb = nodeComb[i].filter(val => val != excludeVal);
-        
+                
+                let rootKeyVal = getIndex(graphKeyIndex, rootIndex);
+                let destKeyVal = getIndex(graphKeyIndex, excludeVal);
+                    
+                let deleteItem = false;
+                for (const prop in keyStore) {
+                    if (Object.hasOwn(keyStore, prop) && prop == rootKeyVal ) {
+                        deleteItem = true;
+                    }
+                    if(deleteItem)
+                        delete keyStore[prop];
+                }
+
+                let rootGridIndex = keysIndexes[rootKeyVal];
+                keyStore[rootKeyVal]= "" + rootGridIndex[0] + rootGridIndex[1];
+                keyDestFound = false;
+                noOfSteps = 0;
+                visited = {};
+
+                //console.log('Before KeyStore');
+                //console.log(keyStore);
+                let distance =  getDistince(destKeyVal, [rootGridIndex], keyStore);
+
+                if(rootKeyVal == 'r' && Object.keys(keyStore).length > 1) {
+                    //console.log('Found --Distance');
+                    distinct = 999;
+                }
+
+                //console.log('After KeyStore');
+                //console.log(keyStore);
+                /*    
+                console.log(' rootKeyVal:- ' + rootKeyVal
+                                + ' destKeyVal:- ' + destKeyVal
+                                +  ' # distance:- ' + distance);
+                */
+                                
+
                 if(tempNodeComb.length > 1) {                    
                     let cIndex = ""+ rootIndex + excludeVal;
                     allCombinations[cIndex] = getCombinations(tempNodeComb);
-                     
-                    if(distinctGraph[rootIndex][nodeComb[i][j]] != 999) {
-                        //console.log('Out---'+distinctGraph[rootIndex][nodeComb[i][j]]);
-                       // console.log(findMimMovesAllKeys(nodeComb[i][j],cIndex, tempNodeComb, 1));
-                        
-                        cost = parseInt(distinctGraph[rootIndex][nodeComb[i][j]]) 
-                                + parseInt(findMimMovesAllKeys(nodeComb[i][j],cIndex, tempNodeComb, 1));
+                    
+                    if(distance != 999) {
+                        cost = parseInt(distance) 
+                                + parseInt(findMimMovesAllKeys(nodeComb[i][j], cIndex, tempNodeComb, 1, keyStore));
                     }
                     else {
-                        //console.log('In----');
-                        cost = parseInt(distinctGraph[rootIndex][nodeComb[i][j]]); 
+                        cost = parseInt(distance); 
                     }
                     
                     //console.log('Before end > rootIndex ' + rootIndex +'---' + nodeComb[i][j] +' cost -> ' + cost); 
                 } else {
-                    let tc = parseInt(distinctGraph[rootIndex][nodeComb[i][j]]) 
-                    if(tempNodeComb.length != 0)
-                        tc +=  parseInt(distinctGraph[nodeComb[i][j]][tempNodeComb[0]]);
+                   
+                    let tc = parseInt(distance); 
 
+                    if(tempNodeComb.length != 0) {
+                        let rootKeyVal = getIndex(graphKeyIndex, nodeComb[i][j]);
+                        let destKeyVal = getIndex(graphKeyIndex, tempNodeComb[0]);
+                        let rootGridIndex = keysIndexes[rootKeyVal];
+                        keyStore[rootKeyVal]= "" + rootGridIndex[0] + rootGridIndex[1];
+                        keyDestFound = false;
+                        noOfSteps = 0;
+                        visited = {};
+
+                        //console.log('keyStore');
+                        //console.log(keyStore);
+
+                        let distance =  getDistince(destKeyVal, [rootGridIndex], keyStore);
+                        
+                        /*    
+                        console.log(' rootKeyVal:- ' + rootKeyVal
+                                        + ' destKeyVal:- ' + destKeyVal
+                                        + ' ### distance:- '+ distance);
+                        */
+                        
+                        tc +=  parseInt(distance);
+                    }
                     //console.log('End > rootIndex ' + rootIndex + "-- to -- " + nodeComb[i][j] +'-to-' + tempNodeComb[0] +' cost ---> ' + tc);
                     cost = tc;
                 }
@@ -387,21 +444,19 @@ var shortestPathAllKeys = function(grid) {
             }
         }
 
-        console.log('>>>>>>>>>>>>>>>> rootIndex:- '+rootIndex+' -- min --' +min);
+        //console.log('>>>>>>>>>>>>>>>> rootIndex:- '+rootIndex+' -- min --' +min);
         
         return min;
     }
     allCombinations["" + 0] = getCombinations(nodes);
-    let min = findMimMovesAllKeys(0,"0",nodes,1);
+    //console.log(allCombinations);
+    let min = findMimMovesAllKeys(0,"0",nodes,1,{});
 
-    if (isNaN(min) || min == 999 || min > 999 || min == 0) {
+    //console.log('Minimum Steps:- ' + min);
+
+    if (isNaN(min) || min <= 0 || min >= 999) {
         return -1;
     } else {
         return min;
     }
-    
 };
-
-
-
-//shortestPathAllKeys(grid)
